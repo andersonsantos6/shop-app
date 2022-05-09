@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shop/models/product.dart';
+import 'package:shop/models/product_list.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({Key? key}) : super(key: key);
@@ -32,6 +34,23 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _descriptionFocus.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_formData.isEmpty) {
+      final arg = ModalRoute.of(context)?.settings.arguments;
+      if (arg != null) {
+        final product = arg as Product;
+        _formData['id'] = product.id;
+        _formData['name'] = product.name;
+        _formData['price'] = product.price;
+        _formData['description'] = product.description;
+        _formData['imageUrl'] = product.imageUrl;
+        _imageUrlController.text = product.imageUrl;
+      }
+    }
+  }
+
   void updateImage() {
     setState(() {});
   }
@@ -51,17 +70,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
     }
 
     _formKey.currentState?.save();
-    final newProduct = Product(
-        id: Random().nextDouble().toString(),
-        description: _formData['description'] as String,
-        imageUrl: _formData['imageurl'] as String,
-        isFavotrite: false,
-        price: _formData['price'] as double,
-        name: _formData['name'] as String);
-    print(newProduct.name);
-    print(newProduct.description);
-    print(newProduct.id);
-    print(newProduct.price);
+
+    Provider.of<ProductList>(
+      context,
+      listen: false,
+    ).saveProduct(_formData);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -83,6 +97,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
           child: ListView(
             children: [
               TextFormField(
+                  initialValue: _formData['name']?.toString(),
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_priceFoucs);
                   },
@@ -103,6 +118,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   },
                   onSaved: (name) => _formData['name'] = name ?? ''),
               TextFormField(
+                  initialValue: _formData['price']?.toString(),
                   onSaved: (price) =>
                       _formData['price'] = double.parse(price ?? '0'),
                   textInputAction: TextInputAction.next,
@@ -122,6 +138,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     return null;
                   }),
               TextFormField(
+                initialValue: _formData['description']?.toString(),
                 validator: (_description) {
                   final description = _description ?? '';
 
