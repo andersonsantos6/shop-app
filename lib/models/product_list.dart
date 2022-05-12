@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:math';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
+  final _baseUrl = 'sua-url-aqui';
+
   List<Product> _items = dummyProducts;
   int get itemsCount {
     return _items.length;
@@ -15,8 +18,32 @@ class ProductList with ChangeNotifier {
       _items.where((prod) => prod.isFavotrite).toList();
 
   void addProduct(Product product) {
-    _items.add(product);
-    notifyListeners();
+    final future = http.post(
+      Uri.parse('$_baseUrl/products.json'),
+      body: jsonEncode(
+        {
+          'name': product.name,
+          'description': product.description,
+          'price': product.price,
+          'imageUrl': product.imageUrl,
+          'isFavorite': product.isFavotrite,
+        },
+      ),
+    );
+
+    future.then((response) {
+      final id = jsonDecode(response.body)['name'];
+      _items.add(
+        Product(
+            id: id,
+            description: product.name,
+            imageUrl: product.imageUrl,
+            isFavotrite: product.isFavotrite,
+            price: product.price,
+            name: product.name),
+      );
+      notifyListeners();
+    });
   }
 
   void saveProduct(Map<String, Object> data) {
