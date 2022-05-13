@@ -6,7 +6,7 @@ import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
-  final _baseUrl = 'https://shop-app-feb73-default-rtdb.firebaseio.com';
+  final _baseUrl = 'database-url';
 
   List<Product> _items = dummyProducts;
   int get itemsCount {
