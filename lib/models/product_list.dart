@@ -6,7 +6,7 @@ import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
-  final _baseUrl = 'sua-url-aqui';
+  final _baseUrl = 'https://shop-app-feb73-default-rtdb.firebaseio.com';
 
   List<Product> _items = dummyProducts;
   int get itemsCount {
@@ -17,7 +17,7 @@ class ProductList with ChangeNotifier {
   List<Product> get Favoriteitems =>
       _items.where((prod) => prod.isFavotrite).toList();
 
-  void addProduct(Product product) {
+  Future<void> addProduct(Product product) {
     final future = http.post(
       Uri.parse('$_baseUrl/products.json'),
       body: jsonEncode(
@@ -31,7 +31,7 @@ class ProductList with ChangeNotifier {
       ),
     );
 
-    future.then((response) {
+    return future.then<void>((response) {
       final id = jsonDecode(response.body)['name'];
       _items.add(
         Product(
@@ -46,7 +46,7 @@ class ProductList with ChangeNotifier {
     });
   }
 
-  void saveProduct(Map<String, Object> data) {
+  Future<void> saveProduct(Map<String, Object> data) {
     bool hasId = data['id'] != null;
 
     final product = Product(
@@ -57,9 +57,9 @@ class ProductList with ChangeNotifier {
         price: data['price'] as double,
         name: data['name'] as String);
     if (hasId) {
-      updateProduct(product);
+      return updateProduct(product);
     } else {
-      addProduct(product);
+      return addProduct(product);
     }
   }
 
@@ -71,12 +71,13 @@ class ProductList with ChangeNotifier {
     }
   }
 
-  void updateProduct(Product product) {
+  Future<void> updateProduct(Product product) {
     int index = _items.indexWhere((p) => p.id == product.id);
     if (index >= 0) {
       _items[index] = product;
       notifyListeners();
     }
+    return Future.value();
   }
 }
 
