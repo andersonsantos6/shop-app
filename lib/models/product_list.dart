@@ -6,9 +6,10 @@ import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
-  final _baseUrl = 'database-url';
+  final _url =
+      'https://shop-app-feb73-default-rtdb.firebaseio.com/products.json';
 
-  List<Product> _items = dummyProducts;
+  List<Product> _items = [];
   int get itemsCount {
     return _items.length;
   }
@@ -17,9 +18,9 @@ class ProductList with ChangeNotifier {
   List<Product> get Favoriteitems =>
       _items.where((prod) => prod.isFavotrite).toList();
 
-  Future<void> addProduct(Product product) {
-    final future = http.post(
-      Uri.parse('$_baseUrl/products.json'),
+  Future<void> addProduct(Product product) async {
+    final response = await http.post(
+      Uri.parse(_url),
       body: jsonEncode(
         {
           'name': product.name,
@@ -30,20 +31,37 @@ class ProductList with ChangeNotifier {
         },
       ),
     );
+    final id = jsonDecode(response.body)['name'];
+    _items.add(
+      Product(
+          id: id,
+          description: product.name,
+          imageUrl: product.imageUrl,
+          isFavotrite: product.isFavotrite,
+          price: product.price,
+          name: product.name),
+    );
+    notifyListeners();
+  }
 
-    return future.then<void>((response) {
-      final id = jsonDecode(response.body)['name'];
+  Future<void> loadProducts() async {
+    final response = await http.get(Uri.parse(_url));
+    print(jsonDecode(response.body));
+    if (response.body == 'null') return;
+    Map<String, dynamic> data = jsonDecode(response.body);
+    data.forEach((productId, productData) {
       _items.add(
         Product(
-            id: id,
-            description: product.name,
-            imageUrl: product.imageUrl,
-            isFavotrite: product.isFavotrite,
-            price: product.price,
-            name: product.name),
+          id: productId,
+          description: productData['description'],
+          imageUrl: productData['imageUrl'],
+          isFavotrite: false,
+          price: productData['price'],
+          name: productData['name'],
+        ),
       );
-      notifyListeners();
     });
+    notifyListeners();
   }
 
   Future<void> saveProduct(Map<String, Object> data) {
