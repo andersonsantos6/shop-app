@@ -19,7 +19,7 @@ class OrderList with ChangeNotifier {
     return _items.length;
   }
 
-  Future<void> loadProducts() async {
+  Future<void> loadOrders() async {
     _items.clear();
     final response =
         await http.get(Uri.parse('${Constants.ORDER_BASE_URL}.json'));

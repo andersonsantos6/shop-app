@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop/components/app_drawer.dart';
 import 'package:shop/components/badge.dart';
+import 'package:shop/components/product_grid.dart';
 import 'package:shop/models/cart.dart';
 import 'package:shop/models/product_list.dart';
 import 'package:shop/utils/app_routes.dart';
-import '../components/product_grid.dart';
 
 enum FilterOptions {
   Favorite,
   All,
 }
 
-class ProductsOverViewPage extends StatefulWidget {
-  ProductsOverViewPage({Key? key}) : super(key: key);
+class ProductsOverviewPage extends StatefulWidget {
+  ProductsOverviewPage({Key? key}) : super(key: key);
 
   @override
-  State<ProductsOverViewPage> createState() => _ProductsOverViewPageState();
+  _ProductsOverviewPageState createState() => _ProductsOverviewPageState();
 }
 
-class _ProductsOverViewPageState extends State<ProductsOverViewPage> {
+class _ProductsOverviewPageState extends State<ProductsOverviewPage> {
   bool _showFavoriteOnly = false;
-  late bool _isLoading;
+  bool _isLoading = true;
 
-  _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-    });
-    Provider.of<ProductList>(context, listen: false)
-        .loadProducts()
-        .then((value) {
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<ProductList>(
+      context,
+      listen: false,
+    ).loadProducts().then((value) {
       setState(() {
         _isLoading = false;
       });
@@ -37,16 +37,10 @@ class _ProductsOverViewPageState extends State<ProductsOverViewPage> {
   }
 
   @override
-  void initState() {
-    _loadProducts();
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Minha Loja'),
+        title: Text('Minha Loja'),
         actions: [
           PopupMenuButton(
             icon: Icon(Icons.more_vert),
@@ -72,25 +66,22 @@ class _ProductsOverViewPageState extends State<ProductsOverViewPage> {
           ),
           Consumer<Cart>(
             child: IconButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed(AppRoutes.CART);
-                },
-                icon: Icon(Icons.shopping_cart)),
-            builder: (context, cart, child) {
-              return Badge(
-                child: child!,
-                value: cart.itemsCount.toString(),
-              );
-            },
+              onPressed: () {
+                Navigator.of(context).pushNamed(AppRoutes.CART);
+              },
+              icon: Icon(Icons.shopping_cart),
+            ),
+            builder: (ctx, cart, child) => Badge(
+              value: cart.itemsCount.toString(),
+              child: child!,
+            ),
           ),
         ],
       ),
-      drawer: AppDrawer(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => _loadProducts(),
-              child: ProductGrid(showFavoriteOnly: _showFavoriteOnly)),
+          : ProductGrid(showFavoriteOnly: _showFavoriteOnly),
+      drawer: AppDrawer(),
     );
   }
 }
